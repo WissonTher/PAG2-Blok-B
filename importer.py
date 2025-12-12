@@ -1,13 +1,11 @@
 from urllib.request import urlretrieve
 from zipfile import ZipFile
+from config import BASE_URL, MONTH, YEAR
 
-BASE_URL = "https://danepubliczne.imgw.pl/pl/datastore/getfiledown/Arch/Telemetria/Meteo/"
-YEAR = 2024
-MONTH = 9
+def import_meteo(output_directory):
+    zip_file = f"{output_directory}.zip"
 
-FILENAME = f"Meteo_{YEAR}-{str(MONTH).zfill(2)}.zip"
+    file = urlretrieve(f"{BASE_URL}{YEAR}/{zip_file}", f"{zip_file}")
 
-file = urlretrieve(f"{BASE_URL}{YEAR}/{FILENAME}", f"{FILENAME}")
-
-with ZipFile(f"{file[0]}", 'r') as zip_ref:
-    zip_ref.extractall(f"./{file[0][:-4]}")
+    with ZipFile(f"{file[0]}", 'r') as zip_ref:
+        zip_ref.extractall(f"./{zip_file[:-4]}")
