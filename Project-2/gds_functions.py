@@ -56,8 +56,3 @@ def target(start_y, start_x, target_y, target_x, dijkstra=False):
         crs="EPSG:2180"
     )
     return gdf.to_json()
-
-geojson = target(186940.80, 502461.75, 207331.00, 528063.05, dijkstra=True)
-print(geojson)
-geojson = target(186940.80, 502461.75, 207331.00, 528063.05)
-print(geojson)
