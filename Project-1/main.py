@@ -129,39 +129,31 @@ class InterfaceWidget(QtWidgets.QWidget, Ui_Form):
             self.log("Nie znaleziono poprawnych danych do wyświetlenia.")
 
     def verify_with_redis(self):
-        if not hasattr(self, 'facilities_data') or not self.facilities_data:
-            self.log("Brak danych z MongoDB")
-            return
+        self.log("Weryfikacja z bazą Redis...")
+        r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-        try:
-            self.log("Weryfikacja z bazą Redis...")
-            r = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        all_redis_keys = r.keys('meteo:*')
 
-            all_redis_keys = r.keys('meteo:*')
+        redis_station_ids = set()
+        for key in all_redis_keys:
+            parts = key.split(':')
+            if len(parts) >= 2:
+                redis_station_ids.add(parts[1])
 
-            redis_station_ids = set()
-            for key in all_redis_keys:
-                parts = key.split(':')
-                if len(parts) >= 2:
-                    redis_station_ids.add(parts[1])
+        filtered_data = []
+        for fac in self.facilities_data:
+            ifcid = str(fac.get('properties', {}).get('ifcid'))
 
-            filtered_data = []
-            for fac in self.facilities_data:
-                ifcid = str(fac.get('properties', {}).get('ifcid'))
-
-                if ifcid in redis_station_ids:
-                    filtered_data.append(fac)
+            if ifcid in redis_station_ids:
+                filtered_data.append(fac)
             
-            removed_count = len(self.facilities_data) - len(filtered_data)
+        removed_count = len(self.facilities_data) - len(filtered_data)
 
-            self.display(filtered_data)
-            
-            self.log(f"Weryfikacja zakończona.")
-            self.log(f"Usunięto: <b>{removed_count}</b>.")
-            self.log(f"Pozostałe obiekty: <b>{len(filtered_data)}</b>")
-
-        except Exception as e:
-            self.log(f"Błąd podczas weryfikacji Redis: {e}")
+        self.display(filtered_data)
+        
+        self.log(f"Weryfikacja zakończona.")
+        self.log(f"Usunięto: <b>{removed_count}</b>.")
+        self.log(f"Pozostałe obiekty: <b>{len(filtered_data)}</b>")
 
     def get_ifcid(self):
         self.ifcid = self.E_ifcid.toPlainText().strip()
